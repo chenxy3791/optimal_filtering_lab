@@ -14,7 +14,7 @@ turtle.tracer(50000, delay=0)
 turtle.register_shape("dot", ((-3,-3), (-3,3), (3,3), (3,-3)))
 turtle.register_shape("tri", ((-3, -2), (0, 3), (3, -2), (0, 0)))
 turtle.speed(0)
-turtle.title("Poor robbie is lost")
+turtle.title("Wandering Robbie")
 
 UPDATE_EVERY = 0
 DRAW_EVERY = 2
@@ -75,7 +75,8 @@ class Maze(object):
 
     def show_mean(self, x, y, confident=False):
         if confident:
-            turtle.color("#00AA00")
+            #turtle.color("#00AA00")
+            turtle.color("blue")
         else:
             turtle.color("#cccccc")
         turtle.setposition(x, y)
@@ -108,7 +109,7 @@ class Maze(object):
                     turtle.stamp()
 
     def show_robot(self, robot):
-        turtle.color("green")
+        turtle.color("yellow")
         turtle.shape('turtle')
         turtle.setposition(*robot.xy)
         turtle.setheading(90 - robot.h)

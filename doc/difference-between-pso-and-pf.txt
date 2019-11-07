@@ -1,0 +1,20 @@
+https://www.researchgate.net/post/Whats_the_difference_between_PSO_and_PF
+
+Particle Swarm Optimization (PSO) is a versatile population-based optimization 
+technique, in many respects similar to evolutionary algorithms. The PSO has its 
+origin on the swarm intelligence algorithms, which are concerned with the design 
+of intelligent multi-agent systems by taking stimulation from the collective 
+behavior of social insects such as ants, termites, bees, and wasps, as well as 
+from other animal societies such as flocks of birds or schools of fish. 
+
+In PSO method, the particles that represent potential solutions move around in 
+the phase space with a velocity updated by the particle’s own experience and the 
+experience of the particle’s neighbors or the experience of the whole swarm.
+
+Particle Filter (PF) performs sequential Monte Carlo estimation (PSO is not 
+Monte Carlo method) based on particle representation of probability densities, 
+by representing the posterior density function by a set of random samples with 
+associated weights and computing estimates based on these samples and weights. 
+
+In this method the particles with high weights propagate and the particles with 
+smallest weights are eliminated by a re-sampling procedure.

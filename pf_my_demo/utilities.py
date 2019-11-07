@@ -12,10 +12,16 @@ import random
 import math
 import bisect
 
-from draw import Maze
+#from draw import Maze
 
 PARTICLE_COUNT = 2000    # Total number of particles
 
+ROBOT_HAS_COMPASS = True # Does the robot know where north is? If so, it
+# makes orientation a lot easier since it knows which direction it is facing.
+# If not -- and that is really fascinating -- the particle filter can work
+# out its heading too, it just takes more particles and more time. Try this
+# with 3000+ particles, it obviously needs lots more hypotheses as a particle
+# now has to correctly match not only the position but also the heading.
 # ------------------------------------------------------------------------
 # Some utility functions
 
