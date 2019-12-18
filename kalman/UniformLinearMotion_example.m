@@ -25,57 +25,58 @@ close all;
 %        这个也是一般假定为静态不变的，有可变的情况吗？
 
 %=============== generate data ====================
-orginal_data = (1:2:200);
-noise = randn(1, 100);
+v_true    = 2;
+true_dist = (0 : v_true : 200); % True travelling distance.
+noise = randn(1, length(true_dist));
 sigma = 0.316; 
-meas_data = orginal_data + noise*sigma;
+meas_dist = true_dist + noise*sigma;
 
 %=============== Least Square Method for average velocity estimation=======
-%   y = H * x + b0
-%   y: meas_data, measured data
-%   x: velocity to be estimated
-%   b0:the initial distance at time 0
-y = meas_data';
-H_ls = (1:1:length(meas_data))'; 
-G_ls = H_ls' * H_ls;
+%   y = H * v
+%       y(1) = 1 * v
+%       y(2) = 2 * v
+%       y(3) = 3 * v
+%       ... ==> H = [1 2 3 4 ...]'
+%   y: meas_dist, measured data
+%   v: velocity to be estimated
+y     = meas_dist';
+H_ls  = (1:1:length(meas_dist))'; 
+G_ls  = H_ls' * H_ls;
 G_inv = inv(G_ls);
-x = G_inv * (H_ls' * y);
-fprintf(1, 'The estimated velocity from least-sqaure method = %g\n', x);
+v_ls  = G_inv * (H_ls' * y);
+fprintf(1, 'The estimated velocity from least-sqaure method = %g, ground-truth = %g\n', v_ls, v_true);
 
 %=============== Velocity estimation based on IIR filtering=======
 iir_alpha = 0.9;
-v_instantaneous = meas_data(2:end)-meas_data(1:length(meas_data)-1);
-v_esti = zeros(1, length(v_instantaneous)); 
-v_esti(1) = v_instantaneous(1);
+v_instantaneous = meas_dist(2:end)-meas_dist(1:length(meas_dist)-1);
+v_iir = zeros(1, length(v_instantaneous)); 
+v_iir(1) = v_instantaneous(1);
 
 for k = 2:length(v_instantaneous)
-    v_esti(k) = iir_alpha * v_esti(k-1) + (1-iir_alpha) * v_instantaneous(k);
+    v_iir(k) = iir_alpha * v_iir(k-1) + (1-iir_alpha) * v_instantaneous(k);
 end
 
 figure;
-plot(v_esti); title('Velocity estimation based on IIR filtering');grid on;
-
+plot(v_iir); title('Velocity estimation based on IIR filtering');grid on;
 
 %=============== Kalman filtering ===========================
 % 相关参数
-X = [0; 0];         % k-1 时刻的系统状态. 
-P = [1 0; 0 1];     % k-1 时刻的系统状态对应的协方差矩阵--what is the physical interpretation for P?
-A = [1 1; 0 1];     % 系统参数矩阵--state transition matrix
+X = [0; 0];         % k-1 时刻的系统状态, inclcuding distance and velocity
 Q = [0.0001 0; 0 0.0001];     % 系统过程的协方差--the covariance of the underlying and unknown process noise.
+%P = [1 0; 0 1];     % k-1 时刻的系统状态对应的协方差矩阵--what is the physical interpretation for P?
+P = Q;              % Initialize P to Q. Is it reasonable? To be confirmed.
+A = [1 1; 0 1];     % 系统参数矩阵--state transition matrix
 H = [1 0];          % 测量系统的参数
 R = sigma^2;        % 测量过程的协方差--the covariance of the underlying and unknown measurement process noise.
                     % 
-
-X_buf = zeros(2, length(meas_data));
+X_buf = zeros(2, length(meas_dist));
 X_buf(:,1) = X;
 
-figure;
-hold on;
-for i = 2:100    
-    X_k = A*X;       % k 时刻的系统状态, in this example, no external input is assumed, hence the next state depends only on the previous state. 
+for i = 2:length(true_dist)
+    X_k = A*X;      % k 时刻的系统状态, in this example, no external input is assumed, hence the next state depends only on the previous state. 
     P_k = A*P*A' + Q;                 % k 时刻的系统状态对应的协方差矩阵
     Kg  = P_k*H' / (H*P_k*H' + R);    % 卡尔曼增益(Kalman Gain)
-    X   = X_k + Kg*(meas_data(i) - H*X_k);  % k时刻的系统状态的最优化估算值
+    X   = X_k + Kg*(meas_dist(i) - H*X_k);  % k时刻的系统状态的最优化估算值
     P   = (eye(2) - Kg*H) * P_k;      % 更新k时刻的系统状态对应的协方差矩阵
 
     X_buf(:,i) = X;    
@@ -83,12 +84,16 @@ for i = 2:100
 end
 
 % 纵轴表示速度
-scatter([2:1:100], meas_data(2:end)-meas_data(1:length(meas_data)-1), 20, 's', 'filled', 'red');  grid on;
-scatter([1:1:100], X_buf(2,:), 5); title('Measured instantaneous velocity vs Estimated velocity');grid on;
-plot(v_esti); title('Velocity estimation based on IIR filtering');
+figure;
+scatter([2:1:length(true_dist)], meas_dist(2:end)-meas_dist(1:length(meas_dist)-1), 20, 's', 'filled', 'red');  grid on;
+hold on;
+plot([1:1:length(true_dist)], X_buf(2,:)); 
+plot(v_iir);
+title('Measured instantaneous velocity vs Estimated velocity by Kalman Filter');
+legend('Instantaneous velocity by Naive calculation', 'Estimation by Kalman Filter','Estimation by IIR');
 
 figure; 
 subplot(2,1,1); hold on; grid on;
-plot(meas_data); scatter([1:1:100], X_buf(1,:), 5); title('Measured distance vs Estimated distance');
-subplot(2,1,2); plot(X_buf(1,:)-meas_data);title('Difference between Measured distance vs Estimated distance');grid on;
+plot(meas_dist); scatter([1:1:length(true_dist)], X_buf(1,:), 5); title('Measured distance vs Estimated distance');
+subplot(2,1,2); plot(X_buf(1,:)-meas_dist);title('Difference between Measured distance vs Estimated distance');grid on;
 
